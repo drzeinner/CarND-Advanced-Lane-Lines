@@ -10,7 +10,7 @@
 [image8]: ./output_images/result.jpg "Result"
 [video1]: ./project_video.mp4 "Video"
 
-#Advanced Lane Finding Project
+# Advanced Lane Finding Project
 
 ### Camera Calibration
 
