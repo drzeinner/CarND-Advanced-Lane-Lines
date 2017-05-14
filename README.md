@@ -8,7 +8,7 @@
 [image6]: ./output_images/top_down.jpg "Top Down"
 [image7]: ./output_images/lines.jpg "Lines"
 [image8]: ./output_images/result.jpg "Result"
-[video1]: ./project_video.mp4 "Video"
+[video1]: https://youtu.be/nHAGqji9Q4U "Video"
 
 # Advanced Lane Finding Project
 
@@ -84,7 +84,7 @@ This code was implemented in slidingWindow function in main.py.
 
 #### 5. Radius of Curvature
 
-I did this in lines # through # in my code in `my_other_file.py`
+The radius of curvature was calcuated in Line.py in the calculateCurvature method.
 
 #### 6. Result
 
@@ -97,7 +97,7 @@ Then I just combined that with the original image.
 
 ### Pipeline (video)
 
-Here's a [link to my video result](./project_video.mp4)
+Here's a [link to my video result](https://youtu.be/nHAGqji9Q4U)
 
 ---
 

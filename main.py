@@ -13,7 +13,6 @@ from moviepy.editor import VideoFileClip
 leftLine = Line()
 rightLine = Line()
 
-
 # -------------------------------------------------------------------
 # Calibrate the camera
 #
@@ -349,9 +348,12 @@ def threshold_image(img):
 # Checking that they are separated by approximately the right distance horizontally
 # Checking that they are roughly parallel
 #
-def isFrameValid(leftLine, rightLine):
+def isFrameValid():
+    global leftLine, rightLine
+    curve_diff = np.abs(leftLine.radius_of_curvature - rightLine.radius_of_curvature)
+
     # Checking that they have similar curvature
-    bSimilarCurvature = True
+    bSimilarCurvature = curve_diff < 1000
 
     # Checking that they are separated by approximately the right distance horizontally
     bCorrectDistance = True
@@ -361,6 +363,16 @@ def isFrameValid(leftLine, rightLine):
 
     return bSimilarCurvature and bCorrectDistance and bParallel
 
+
+# -------------------------------------------------------------------
+#  Calculates how far the car is from the center of the lane
+#
+def calculateDeviation(img):
+    base_ypos = img.shape[0] - 1
+    img_center = (img.shape[1] - 1) / 2 * Line.xm_per_pix
+    car_center = (leftLine.line_base_pos + rightLine.line_base_pos) / 2 * Line.xm_per_pix
+    deviation = np.abs(img_center - car_center)
+    return deviation
 
 # -------------------------------------------------------------------
 # Sliding window technique
@@ -455,10 +467,11 @@ def slidingWindow(img):
 
     leftLine.current_fit = np.polyfit(nonzeroy[left_lane_inds], nonzerox[left_lane_inds], 2)
     rightLine.current_fit = np.polyfit(nonzeroy[right_lane_inds], nonzerox[right_lane_inds], 2)
-
+    leftLine.calculateCurvature(leftLine.current_fit)
+    rightLine.calculateCurvature(rightLine.current_fit)
     # if the frame is valid
     # add the data to the line history
-    if isFrameValid(leftLine, rightLine):
+    if isFrameValid():
         leftLine.updateData()
         rightLine.updateData()
         leftLine.detected = True
@@ -499,12 +512,11 @@ def slidingWindow(img):
 
 
 def pipeline(image):
-
     # Undistort the image
     undistorted = undistort(image)
 
-    explore_color_spaces(undistorted)
-    explore_gradients(undistorted)
+    #explore_color_spaces(undistorted)
+    #explore_gradients(undistorted)
 
     thresholded = threshold_image(undistorted)
 
@@ -517,6 +529,14 @@ def pipeline(image):
     # Combine the result with the original image
     result = cv2.addWeighted(undistorted, 1, newwarp, 0.3, 0)
 
+    # Print Stats
+    cv2.putText(result, "Left Line Curvature: {}".format(leftLine.calculateCurvature(leftLine.best_fit)), (0, 50), cv2.FONT_HERSHEY_COMPLEX, 0.75, (176, 73, 42), 2)
+    cv2.putText(result, "Right Line Curvature: {}".format(rightLine.calculateCurvature(rightLine.best_fit)), (0, 100),
+                cv2.FONT_HERSHEY_COMPLEX, 0.75, (176, 73, 42), 2)
+    cv2.putText(result, "Center Deviation: {}m".format(calculateDeviation(newwarp)), (0, 150), cv2.FONT_HERSHEY_COMPLEX, 0.75, (176, 73, 42), 2)
+
+    #plt.imsave(os.path.join('output_images', 'testResult.jpg'), result)
+
     return result
 
 
@@ -525,21 +545,21 @@ def pipeline(image):
 # Run tests and image processing pipeline here
 #
 def main():
-    images = []
-    input_files = ['test_images/test6.jpg']
+    # images = []
+    # input_files = ['test_images/test6.jpg']
+    #
+    # # Read in an image
+    # for input_file in input_files:
+    #     image = mpimg.imread(input_file)
+    #     images.append(image)
+    #
+    # for image in images:
+    #     pipeline(image)
 
-    # Read in an image
-    for input_file in input_files:
-        image = mpimg.imread(input_file)
-        images.append(image)
-
-    for image in images:
-        pipeline(image)
-
-    # output_video = 'output_video2.mp4'
-    # input_clip = VideoFileClip("project_video.mp4")
-    # output_clip = input_clip.fl_image(pipeline)  # NOTE: this function expects color images!!
-    # output_clip.write_videofile(output_video, audio=False)
+    output_video = 'output_video2.mp4'
+    input_clip = VideoFileClip("project_video.mp4")
+    output_clip = input_clip.fl_image(pipeline)  # NOTE: this function expects color images!!
+    output_clip.write_videofile(output_video, audio=False)
 
 
 if __name__ == '__main__':
